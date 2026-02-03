@@ -20,6 +20,8 @@
         </div>
         <div class="nav-actions">
           <button id="new-contest">New contest</button>
+          <button id="spotify-connect" class="ghost">Connect Spotify</button>
+          <span id="spotify-status" class="pill">Spotify: not connected</span>
         </div>
       </nav>
     </header>
@@ -45,12 +47,21 @@
       </section>
     </main>
 
+    <script src="spotify.js"></script>
     <script>
       document.querySelector("#new-contest").onclick = () => {
         const id = `mc_${Date.now().toString(36)}`;
         localStorage.setItem("melomaniac:lastContest", id);
         window.location.href = `setup.html?contest=${id}`;
       };
+      const spotifyConnect = document.querySelector("#spotify-connect");
+      const spotifyStatus = document.querySelector("#spotify-status");
+      if (spotifyConnect && spotifyStatus && window.MelomaniacSpotify) {
+        spotifyConnect.onclick = () => window.MelomaniacSpotify.startAuth();
+        window.MelomaniacSpotify.getAccessToken().then((token) => {
+          spotifyStatus.textContent = token ? "Spotify: connected" : "Spotify: not connected";
+        });
+      }
     </script>
   </body>
 </html>

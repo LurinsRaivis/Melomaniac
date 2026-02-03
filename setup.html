@@ -21,6 +21,8 @@
         <div class="nav-actions">
           <select id="contest-select"></select>
           <button id="new-contest">New contest</button>
+          <button id="spotify-connect" class="ghost">Connect Spotify</button>
+          <span id="spotify-status" class="pill">Spotify: not connected</span>
         </div>
       </nav>
     </header>
@@ -44,13 +46,15 @@
       <section class="panel">
         <p class="muted">
           Audio files are stored in localStorage for this browser. For best
-          compatibility, use direct MP3/OGG URLs.
+          compatibility, use direct MP3/OGG URLs. For Spotify playback, paste a
+          track link or `spotify:track:` URI.
         </p>
       </section>
 
       <section id="setup-list" class="form-grid"></section>
     </main>
 
+    <script src="spotify.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

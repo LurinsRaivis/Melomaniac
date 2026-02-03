@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Melomaniac | Spotify Auth</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-view="auth">
+    <header>
+      <nav class="nav">
+        <div class="brand">
+          <div class="brand-badge">M</div>
+          <span>Melomaniac</span>
+        </div>
+        <div class="nav-links">
+          <a href="participant.html">Participants</a>
+          <a href="host.html">Host</a>
+          <a href="setup.html">Setup</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Connecting to Spotify</h1>
+          <p id="auth-message" class="muted">
+            We are finishing the secure login. This will only take a moment.
+          </p>
+          <div style="margin-top: 18px;">
+            <a class="button" href="index.html">Back to launch</a>
+          </div>
+        </div>
+        <div class="status-card">
+          <small>Status</small>
+          <strong id="auth-status">Working...</strong>
+        </div>
+      </section>
+    </main>
+
+    <script src="spotify.js"></script>
+    <script>
+      const status = document.querySelector("#auth-status");
+      const message = document.querySelector("#auth-message");
+
+      async function finishAuth() {
+        try {
+          const result = await window.MelomaniacSpotify.finishAuth();
+          status.textContent = "Connected!";
+          message.textContent = "Spotify access granted. Redirecting you back.";
+          const redirectTo = result?.redirectTo || "host.html";
+          setTimeout(() => {
+            window.location.href = redirectTo;
+          }, 600);
+        } catch (err) {
+          status.textContent = "Auth failed";
+          message.textContent = err?.message || "Could not complete Spotify login.";
+        }
+      }
+
+      finishAuth();
+    </script>
+  </body>
+</html>

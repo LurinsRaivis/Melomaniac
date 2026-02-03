@@ -21,6 +21,8 @@
         <div class="nav-actions">
           <select id="contest-select"></select>
           <button id="new-contest">New contest</button>
+          <button id="spotify-connect" class="ghost">Connect Spotify</button>
+          <span id="spotify-status" class="pill">Spotify: not connected</span>
         </div>
       </nav>
     </header>
@@ -46,6 +48,7 @@
       <audio id="participant-audio" preload="auto"></audio>
     </main>
 
+    <script src="spotify.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

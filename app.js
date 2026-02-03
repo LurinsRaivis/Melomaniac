@@ -15,6 +15,11 @@ const DEFAULT_TOPICS = [
 ];
 
 const view = document.body.dataset.view;
+const spotify = window.MelomaniacSpotify;
+
+let spotifyPlayer = null;
+let spotifyDeviceId = null;
+let spotifyConnecting = false;
 
 function uid() {
   return `mc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
@@ -152,7 +157,12 @@ function renderBoard(container, contest, options = {}) {
       }
 
       if (!song.used) {
-        level.onclick = () => options.onPick?.(tIndex, sIndex);
+        level.onclick = () => {
+          const result = options.onPick?.(tIndex, sIndex);
+          if (result && typeof result.then === "function") {
+            result.catch(() => {});
+          }
+        };
       }
 
       levels.appendChild(level);
@@ -168,12 +178,87 @@ function renderBoard(container, contest, options = {}) {
       card.appendChild(detail);
 
       levels.querySelectorAll(".level").forEach((level, idx) => {
-        level.onclick = () => options.onPick?.(tIndex, idx, detail);
+        level.onclick = () => {
+          const result = options.onPick?.(tIndex, idx, detail);
+          if (result && typeof result.then === "function") {
+            result.catch(() => {});
+          }
+        };
       });
     }
 
     container.appendChild(card);
   });
+}
+
+async function updateSpotifyStatus() {
+  if (!spotify) return;
+  const status = document.querySelector("#spotify-status");
+  const connect = document.querySelector("#spotify-connect");
+  if (!status || !connect) return;
+
+  const token = await spotify.getAccessToken();
+  if (token) {
+    status.textContent = "Spotify: connected";
+    status.classList.remove("warn");
+    status.classList.add("ok");
+    connect.textContent = "Reconnect";
+  } else {
+    status.textContent = "Spotify: not connected";
+    status.classList.remove("ok");
+    status.classList.add("warn");
+    connect.textContent = "Connect Spotify";
+  }
+}
+
+function setupSpotifyUI() {
+  if (!spotify) return;
+  const connect = document.querySelector("#spotify-connect");
+  if (!connect) return;
+  connect.onclick = () => spotify.startAuth(window.location.href);
+  updateSpotifyStatus();
+  window.addEventListener("focus", updateSpotifyStatus);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "melomaniac:spotify:token") updateSpotifyStatus();
+  });
+}
+
+async function ensureSpotifyPlayer() {
+  if (!spotify) throw new Error("Spotify not available.");
+  if (spotifyDeviceId) return spotifyDeviceId;
+  if (spotifyConnecting) {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return spotifyDeviceId;
+  }
+  spotifyConnecting = true;
+
+  spotifyPlayer = await spotify.createPlayer({ name: "Melomaniac Host" });
+  spotifyPlayer.addListener("ready", ({ device_id }) => {
+    spotifyDeviceId = device_id;
+  });
+  spotifyPlayer.addListener("not_ready", ({ device_id }) => {
+    if (spotifyDeviceId === device_id) spotifyDeviceId = null;
+  });
+
+  const connected = await spotifyPlayer.connect();
+  if (!connected) {
+    spotifyConnecting = false;
+    throw new Error("Spotify player failed to connect.");
+  }
+
+  const startedAt = Date.now();
+  while (!spotifyDeviceId && Date.now() - startedAt < 4000) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  if (!spotifyDeviceId) {
+    spotifyConnecting = false;
+    throw new Error("Spotify device not ready.");
+  }
+
+  await spotify.transferPlayback(spotifyDeviceId);
+  spotifyConnecting = false;
+  return spotifyDeviceId;
 }
 
 function renderParticipant(contest) {
@@ -213,7 +298,10 @@ function renderParticipant(contest) {
     const topic = contest.topics[contest.currentPlay.topicIndex];
     const song = topic.songs[contest.currentPlay.levelIndex];
     status.textContent = `Now playing: ${topic.label} - Level ${song.level}`;
-    if (audioUnlocked && song.url && audio.src !== song.url) {
+    const isSpotify = spotify?.isSpotifyTrack?.(song.url);
+    if (isSpotify) {
+      audio.pause();
+    } else if (audioUnlocked && song.url && audio.src !== song.url) {
       audio.src = song.url;
       audio.play().catch(() => {
         status.textContent = "Audio is blocked. Click Enable audio.";
@@ -237,17 +325,33 @@ function renderHost(contest) {
 
   renderBoard(board, contest, {
     showDetails: true,
-    onPick: (topicIndex, levelIndex, detail) => {
+    onPick: async (topicIndex, levelIndex, detail) => {
       const song = contest.topics[topicIndex].songs[levelIndex];
       if (song.used) {
         alert("This song was already played.");
         return;
       }
       detail.textContent = song.title || song.artist ? `${song.artist} - ${song.title}` : "No song info";
+      const trackId = spotify?.parseTrackId?.(song.url);
+
       if (!song.url) {
-        alert("Add a song URL in Setup before playing.");
+        alert("Add a song URL or Spotify track in Setup before playing.");
         return;
       }
+
+      if (trackId) {
+        try {
+          const deviceId = await ensureSpotifyPlayer();
+          await spotify.playTrack(deviceId, trackId);
+        } catch (err) {
+          alert("Spotify playback failed. Make sure you are logged in with Premium.");
+          return;
+        }
+      } else {
+        preview.src = song.url;
+        preview.play().catch(() => {});
+      }
+
       song.used = true;
       contest.currentPlay = {
         topicIndex,
@@ -257,8 +361,6 @@ function renderHost(contest) {
       contest.selection = null;
       contest.updatedAt = Date.now();
       updateContest(contest);
-      preview.src = song.url;
-      preview.play().catch(() => {});
     },
   });
 
@@ -267,6 +369,9 @@ function renderHost(contest) {
     contest.updatedAt = Date.now();
     updateContest(contest);
     preview.pause();
+    if (spotifyDeviceId) {
+      spotify.pausePlayback(spotifyDeviceId).catch(() => {});
+    }
   };
 }
 
@@ -369,6 +474,7 @@ function start() {
   const contest = getContest(contestId) || createContest("Melomaniac", contestId);
   setContestId(contest.id);
   syncNav(contest.id);
+  setupSpotifyUI();
 
   if (view === "participant") {
     renderParticipant(contest);
