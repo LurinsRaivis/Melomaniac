@@ -25,6 +25,17 @@ function uid() {
   return `mc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
 }
 
+function darkenHex(hex, amount = 18) {
+  if (!hex) return hex;
+  const normalized = hex.replace("#", "");
+  if (normalized.length !== 6) return hex;
+  const num = parseInt(normalized, 16);
+  const r = Math.max(0, (num >> 16) - amount);
+  const g = Math.max(0, ((num >> 8) & 0xff) - amount);
+  const b = Math.max(0, (num & 0xff) - amount);
+  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
 function loadContests() {
   const raw = localStorage.getItem(STORE_KEY);
   if (!raw) return [];
@@ -274,6 +285,36 @@ function renderParticipant(contest) {
   const status = document.querySelector("#now-playing");
   const audio = document.querySelector("#participant-audio");
   const unlockButton = document.querySelector("#unlock-audio");
+  const topicColorInput = document.querySelector("#topic-color");
+  const levelColorInput = document.querySelector("#level-color");
+
+  const colorKey = `melomaniac:colors:${contest.id}`;
+  const applyColors = (topicColor, levelColor) => {
+    document.documentElement.style.setProperty("--topic-color", topicColor);
+    document.documentElement.style.setProperty("--topic-color-dark", darkenHex(topicColor, 22));
+    document.documentElement.style.setProperty("--level-color", levelColor);
+    document.documentElement.style.setProperty("--level-color-dark", darkenHex(levelColor, 22));
+  };
+
+  if (topicColorInput && levelColorInput) {
+    const stored = localStorage.getItem(colorKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed?.topic) topicColorInput.value = parsed.topic;
+        if (parsed?.level) levelColorInput.value = parsed.level;
+      } catch (err) {}
+    }
+    applyColors(topicColorInput.value, levelColorInput.value);
+
+    const handleChange = () => {
+      const next = { topic: topicColorInput.value, level: levelColorInput.value };
+      localStorage.setItem(colorKey, JSON.stringify(next));
+      applyColors(next.topic, next.level);
+    };
+    topicColorInput.addEventListener("input", handleChange);
+    levelColorInput.addEventListener("input", handleChange);
+  }
 
   const audioStateKey = `melomaniac:audio:${contest.id}`;
   let audioUnlocked = sessionStorage.getItem(audioStateKey) === "1";
