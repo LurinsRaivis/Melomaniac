@@ -464,12 +464,14 @@ body[data-view="participant"] .board {
   width: 100%;
   border-radius: 10px;
   border: 1px solid rgba(31, 42, 46, 0.2);
-  padding: 8px 10px;
-  font-weight: 600;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.2px;
 }
 
 .score-value {
-  font-size: 2rem;
+  font-size: 2.6rem;
   font-weight: 700;
 }
 
@@ -481,6 +483,18 @@ body[data-view="participant"] .board {
 
 .score-actions button {
   min-width: 70px;
+}
+
+body[data-view="points"] .hero h1 {
+  font-size: clamp(2rem, 2vw + 1.6rem, 3.1rem);
+}
+
+body[data-view="points"] .score-card {
+  padding: 20px 22px;
+}
+
+body[data-view="points"] .score-value {
+  font-size: clamp(2.2rem, 2vw + 1.4rem, 3.4rem);
 }
 
 .pill {
