@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Melomaniac | Setup</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-view="setup">
+    <header>
+      <nav class="nav">
+        <div class="brand">
+          <div class="brand-badge">M</div>
+          <span>Melomaniac</span>
+        </div>
+        <div class="nav-links">
+          <a data-nav="participant">Participants</a>
+          <a data-nav="host">Host</a>
+          <a data-nav="setup">Setup</a>
+        </div>
+        <div class="nav-actions">
+          <select id="contest-select"></select>
+          <button id="new-contest">New contest</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Contest setup</h1>
+          <p>
+            Load your 10 topics and five song levels each. Add an audio URL or drop
+            in a file (it will be stored locally in this browser).
+          </p>
+        </div>
+        <div class="status-card">
+          <small>Contest name</small>
+          <input id="contest-name" type="text" placeholder="Contest name" style="margin-top: 8px; width: 100%; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(31, 42, 46, 0.2);" />
+          <button id="save-setup" style="margin-top: 12px;">Save setup</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <p class="muted">
+          Audio files are stored in localStorage for this browser. For best
+          compatibility, use direct MP3/OGG URLs.
+        </p>
+      </section>
+
+      <section id="setup-list" class="form-grid"></section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

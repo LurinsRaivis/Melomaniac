@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Melomaniac | Host</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-view="host">
+    <header>
+      <nav class="nav">
+        <div class="brand">
+          <div class="brand-badge">M</div>
+          <span>Melomaniac</span>
+        </div>
+        <div class="nav-links">
+          <a data-nav="participant">Participants</a>
+          <a data-nav="host">Host</a>
+          <a data-nav="setup">Setup</a>
+        </div>
+        <div class="nav-actions">
+          <select id="contest-select"></select>
+          <button id="new-contest">New contest</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Host control</h1>
+          <p>
+            Tap any topic level to play it. The tile will gray out for participants,
+            and the song will start on their screen.
+          </p>
+          <div class="alert" style="margin-top: 12px;">
+            Tip: use the Setup page to load songs before the contest starts.
+          </div>
+        </div>
+        <div class="status-card">
+          <small>Participant selection</small>
+          <strong id="host-status">No selection yet</strong>
+          <button id="stop-play" class="ghost" style="margin-top: 12px;">Stop playback</button>
+        </div>
+      </section>
+
+      <section id="board" class="board"></section>
+
+      <audio id="host-audio" preload="auto"></audio>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

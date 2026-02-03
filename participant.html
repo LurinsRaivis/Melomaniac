@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Melomaniac | Participants</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-view="participant">
+    <header>
+      <nav class="nav">
+        <div class="brand">
+          <div class="brand-badge">M</div>
+          <span>Melomaniac</span>
+        </div>
+        <div class="nav-links">
+          <a data-nav="participant">Participants</a>
+          <a data-nav="host">Host</a>
+          <a data-nav="setup">Setup</a>
+        </div>
+        <div class="nav-actions">
+          <select id="contest-select"></select>
+          <button id="new-contest">New contest</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Pick a topic and a difficulty</h1>
+          <p>
+            Participants tap a circle to suggest the next song. The host sees your
+            pick and starts playback. Once played, the circle turns gray.
+          </p>
+        </div>
+        <div class="status-card">
+          <small>Song status</small>
+          <strong id="now-playing">Waiting for host...</strong>
+          <button id="unlock-audio" class="ghost" style="margin-top: 12px;">Enable audio</button>
+        </div>
+      </section>
+
+      <section id="board" class="board"></section>
+
+      <audio id="participant-audio" preload="auto"></audio>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

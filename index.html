@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Melomaniac | Launch</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-view="participant">
+    <header>
+      <nav class="nav">
+        <div class="brand">
+          <div class="brand-badge">M</div>
+          <span>Melomaniac</span>
+        </div>
+        <div class="nav-links">
+          <a href="participant.html">Participants</a>
+          <a href="host.html">Host</a>
+          <a href="setup.html">Setup</a>
+        </div>
+        <div class="nav-actions">
+          <button id="new-contest">New contest</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Start a new Melomaniac round</h1>
+          <p>
+            Open the Participant view on the big screen, Host view on your device,
+            and Setup to load songs and topics.
+          </p>
+          <div style="margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <a class="button" href="participant.html">Participants</a>
+            <a class="button" href="host.html">Host</a>
+            <a class="button" href="setup.html">Setup</a>
+          </div>
+        </div>
+        <div class="status-card">
+          <small>Next step</small>
+          <strong>Click New contest to create a game</strong>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      document.querySelector("#new-contest").onclick = () => {
+        const id = `mc_${Date.now().toString(36)}`;
+        localStorage.setItem("melomaniac:lastContest", id);
+        window.location.href = `setup.html?contest=${id}`;
+      };
+    </script>
+  </body>
+</html>
