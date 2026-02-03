@@ -156,7 +156,7 @@ function renderBoard(container, contest, options = {}) {
         level.classList.add("selected");
       }
 
-      if (!song.used) {
+      if (!song.used || options.allowUsedClick) {
         level.onclick = () => {
           const result = options.onPick?.(tIndex, sIndex);
           if (result && typeof result.then === "function") {
@@ -325,10 +325,17 @@ function renderHost(contest) {
 
   renderBoard(board, contest, {
     showDetails: true,
+    allowUsedClick: true,
     onPick: async (topicIndex, levelIndex, detail) => {
       const song = contest.topics[topicIndex].songs[levelIndex];
       if (song.used) {
-        alert("This song was already played.");
+        const reopen = confirm("This song was already played. Re-enable it?");
+        if (reopen) {
+          song.used = false;
+          contest.updatedAt = Date.now();
+          updateContest(contest);
+          renderHost(contest);
+        }
         return;
       }
       detail.textContent = song.title || song.artist ? `${song.artist} - ${song.title}` : "No song info";
@@ -376,96 +383,146 @@ function renderHost(contest) {
 }
 
 function renderSetup(contest) {
-  const container = document.querySelector("#setup-list");
   const nameInput = document.querySelector("#contest-name");
   const saveButton = document.querySelector("#save-setup");
+  const board = document.querySelector("#setup-board");
+  const topicInput = document.querySelector("#topic-label");
+  const levelInput = document.querySelector("#level-number");
+  const artistInput = document.querySelector("#song-artist");
+  const titleInput = document.querySelector("#song-title");
+  const urlInput = document.querySelector("#song-url");
+  const clearButton = document.querySelector("#clear-slot");
+  const applyButton = document.querySelector("#apply-slot");
+  const searchInput = document.querySelector("#spotify-query");
+  const searchButton = document.querySelector("#spotify-search");
+  const results = document.querySelector("#spotify-results");
+  const hint = document.querySelector("#spotify-hint");
+
+  let selectedTopic = 0;
+  let selectedLevel = 0;
 
   nameInput.value = contest.name;
 
-  container.innerHTML = "";
-  contest.topics.forEach((topic, tIndex) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "topic-edit";
+  function loadSlot() {
+    const topic = contest.topics[selectedTopic];
+    const song = topic.songs[selectedLevel];
+    topicInput.value = topic.label;
+    levelInput.value = `Level ${song.level}`;
+    artistInput.value = song.artist || "";
+    titleInput.value = song.title || "";
+    urlInput.value = song.url || "";
+  }
 
-    const topicLabel = document.createElement("input");
-    topicLabel.type = "text";
-    topicLabel.value = topic.label;
-    topicLabel.placeholder = "Topic label";
+  function saveSlot() {
+    const topic = contest.topics[selectedTopic];
+    const song = topic.songs[selectedLevel];
+    topic.label = topicInput.value.trim() || topic.label;
+    song.artist = artistInput.value.trim();
+    song.title = titleInput.value.trim();
+    song.url = urlInput.value.trim();
+    contest.updatedAt = Date.now();
+    updateContest(contest);
+  }
 
-    wrapper.appendChild(topicLabel);
-
-    topic.songs.forEach((song, sIndex) => {
-      const row = document.createElement("div");
-      row.className = "song-row";
-
-      const level = document.createElement("strong");
-      level.textContent = `#${song.level}`;
-
-      const artist = document.createElement("input");
-      artist.type = "text";
-      artist.value = song.artist;
-      artist.placeholder = "Artist";
-
-      const title = document.createElement("input");
-      title.type = "text";
-      title.value = song.title;
-      title.placeholder = "Title";
-
-      const url = document.createElement("input");
-      url.type = "url";
-      url.value = song.url;
-      url.placeholder = "Audio URL";
-
-      const file = document.createElement("input");
-      file.type = "file";
-      file.accept = "audio/*";
-      file.onchange = (event) => {
-        const [picked] = event.target.files;
-        if (!picked) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          url.value = reader.result;
-        };
-        reader.readAsDataURL(picked);
-      };
-
-      row.appendChild(level);
-      row.appendChild(artist);
-      row.appendChild(title);
-      row.appendChild(url);
-      row.appendChild(file);
-      wrapper.appendChild(row);
-    });
-
-    container.appendChild(wrapper);
-
-    wrapper.dataset.topicIndex = tIndex;
+  renderBoard(board, contest, {
+    onPick: (topicIndex, levelIndex) => {
+      selectedTopic = topicIndex;
+      selectedLevel = levelIndex;
+      loadSlot();
+    },
   });
+
+  loadSlot();
+
+  applyButton.onclick = () => {
+    saveSlot();
+    renderBoard(board, contest, {
+      onPick: (topicIndex, levelIndex) => {
+        selectedTopic = topicIndex;
+        selectedLevel = levelIndex;
+        loadSlot();
+      },
+    });
+  };
+
+  clearButton.onclick = () => {
+    artistInput.value = "";
+    titleInput.value = "";
+    urlInput.value = "";
+  };
 
   saveButton.onclick = () => {
     contest.name = nameInput.value.trim() || "Melomaniac";
-    contest.topics = Array.from(container.children).map((section) => {
-      const topicIndex = Number(section.dataset.topicIndex);
-      const topicLabel = section.querySelector("input[type=\"text\"]").value.trim();
-      const rows = section.querySelectorAll(".song-row");
-      const songs = Array.from(rows).map((row, idx) => {
-        const inputs = row.querySelectorAll("input");
-        return {
-          level: idx + 1,
-          artist: inputs[0].value.trim(),
-          title: inputs[1].value.trim(),
-          url: inputs[2].value.trim(),
-          used: contest.topics[topicIndex].songs[idx].used,
-        };
-      });
-      return {
-        label: topicLabel || contest.topics[topicIndex].label,
-        songs,
-      };
-    });
+    saveSlot();
     contest.updatedAt = Date.now();
     updateContest(contest);
     alert("Saved! Host and participants will update automatically.");
+  };
+
+  if (hint) {
+    spotify?.getAccessToken?.().then((token) => {
+      hint.textContent = token ? "Search Spotify and click Assign." : "Connect Spotify to search.";
+    });
+  }
+
+  async function runSearch() {
+    if (!spotify) return;
+    const query = searchInput.value.trim();
+    if (!query) return;
+    const token = await spotify.getAccessToken();
+    if (!token) {
+      spotify.startAuth(window.location.href);
+      return;
+    }
+    results.innerHTML = "";
+    hint.textContent = "Searching...";
+    try {
+      const items = await spotify.searchTracks(query, 12);
+      if (!items.length) {
+        hint.textContent = "No results. Try a different search.";
+        return;
+      }
+      hint.textContent = "";
+      items.forEach((track) => {
+        const row = document.createElement("div");
+        row.className = "track-row";
+
+        const img = document.createElement("img");
+        img.src = track.album?.images?.[2]?.url || track.album?.images?.[0]?.url || "";
+        img.alt = track.name;
+
+        const meta = document.createElement("div");
+        meta.className = "track-meta";
+        const title = document.createElement("strong");
+        title.textContent = track.name;
+        const artist = document.createElement("span");
+        artist.textContent = track.artists?.map((a) => a.name).join(", ") || "";
+        meta.appendChild(title);
+        meta.appendChild(artist);
+
+        const button = document.createElement("button");
+        button.className = "ghost";
+        button.textContent = "Assign";
+        button.onclick = () => {
+          artistInput.value = track.artists?.map((a) => a.name).join(", ") || "";
+          titleInput.value = track.name || "";
+          urlInput.value = track.uri;
+          saveSlot();
+        };
+
+        row.appendChild(img);
+        row.appendChild(meta);
+        row.appendChild(button);
+        results.appendChild(row);
+      });
+    } catch (err) {
+      hint.textContent = "Search failed. Check your Spotify login.";
+    }
+  }
+
+  searchButton.onclick = runSearch;
+  searchInput.onkeydown = (event) => {
+    if (event.key === "Enter") runSearch();
   };
 }
 

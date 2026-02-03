@@ -104,9 +104,9 @@ async function startAuth(redirectTo = window.location.href) {
   const challenge = base64UrlEncode(await sha256(verifier));
   const state = randomString(16);
 
-  sessionStorage.setItem(AUTH_VERIFIER_KEY, verifier);
-  sessionStorage.setItem(AUTH_STATE_KEY, state);
-  sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectTo);
+  localStorage.setItem(AUTH_VERIFIER_KEY, verifier);
+  localStorage.setItem(AUTH_STATE_KEY, state);
+  localStorage.setItem(AUTH_REDIRECT_KEY, redirectTo);
 
   const params = new URLSearchParams({
     response_type: "code",
@@ -156,22 +156,22 @@ async function finishAuth() {
   const error = url.searchParams.get("error");
   if (error) throw new Error(error);
 
-  const expectedState = sessionStorage.getItem(AUTH_STATE_KEY);
+  const expectedState = localStorage.getItem(AUTH_STATE_KEY);
   if (!state || !expectedState || state !== expectedState) {
     throw new Error("Spotify auth state mismatch.");
   }
 
-  const verifier = sessionStorage.getItem(AUTH_VERIFIER_KEY);
+  const verifier = localStorage.getItem(AUTH_VERIFIER_KEY);
   if (!code || !verifier) {
     throw new Error("Missing Spotify auth data.");
   }
 
   await exchangeCode(code, verifier);
-  const redirectTo = sessionStorage.getItem(AUTH_REDIRECT_KEY);
+  const redirectTo = localStorage.getItem(AUTH_REDIRECT_KEY);
 
-  sessionStorage.removeItem(AUTH_STATE_KEY);
-  sessionStorage.removeItem(AUTH_VERIFIER_KEY);
-  sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+  localStorage.removeItem(AUTH_STATE_KEY);
+  localStorage.removeItem(AUTH_VERIFIER_KEY);
+  localStorage.removeItem(AUTH_REDIRECT_KEY);
 
   return { redirectTo };
 }
@@ -248,6 +248,15 @@ async function spotifyFetch(url, options = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+async function searchTracks(query, limit = 10) {
+  const url = new URL("https://api.spotify.com/v1/search");
+  url.searchParams.set("type", "track");
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("q", query);
+  const data = await spotifyFetch(url.toString());
+  return data?.tracks?.items || [];
+}
+
 async function transferPlayback(deviceId) {
   return spotifyFetch("https://api.spotify.com/v1/me/player", {
     method: "PUT",
@@ -282,5 +291,6 @@ window.MelomaniacSpotify = {
   transferPlayback,
   playTrack,
   pausePlayback,
+  searchTracks,
   clearToken,
 };

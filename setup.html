@@ -32,8 +32,7 @@
         <div>
           <h1>Contest setup</h1>
           <p>
-            Load your 10 topics and five song levels each. Add an audio URL or drop
-            in a file (it will be stored locally in this browser).
+            Load your topics and songs, then pull tracks straight from Spotify.
           </p>
         </div>
         <div class="status-card">
@@ -45,13 +44,62 @@
 
       <section class="panel">
         <p class="muted">
-          Audio files are stored in localStorage for this browser. For best
-          compatibility, use direct MP3/OGG URLs. For Spotify playback, paste a
-          track link or `spotify:track:` URI.
+          Tip: paste a Spotify track link or search below. When you assign a track,
+          Melomaniac stores the Spotify URI in the slot. MP3/OGG links still work.
         </p>
       </section>
 
-      <section id="setup-list" class="form-grid"></section>
+      <section class="setup-layout">
+        <div class="setup-side">
+          <div class="panel">
+            <h3 class="panel-title">Pick a slot</h3>
+            <p class="muted">Click a circle to edit that song level.</p>
+          </div>
+          <section id="setup-board" class="board"></section>
+        </div>
+        <div class="setup-side">
+          <div class="panel setup-editor">
+            <h3 class="panel-title">Slot details</h3>
+            <div class="field-row">
+              <label>Topic label</label>
+              <input id="topic-label" type="text" placeholder="Topic label" />
+            </div>
+            <div class="field-row">
+              <label>Level</label>
+              <input id="level-number" type="text" disabled />
+            </div>
+            <div class="field-row">
+              <label>Artist</label>
+              <input id="song-artist" type="text" placeholder="Artist" />
+            </div>
+            <div class="field-row">
+              <label>Title</label>
+              <input id="song-title" type="text" placeholder="Title" />
+            </div>
+            <div class="field-row">
+              <label>Audio URL / Spotify URI</label>
+              <input id="song-url" type="text" placeholder="Paste Spotify track link or audio URL" />
+            </div>
+            <div class="field-actions">
+              <button id="clear-slot" class="ghost">Clear slot</button>
+              <button id="apply-slot">Apply changes</button>
+            </div>
+          </div>
+
+          <div class="panel setup-search">
+            <h3 class="panel-title">Spotify search</h3>
+            <div class="field-row">
+              <label>Search</label>
+              <input id="spotify-query" type="text" placeholder="Type a song or artist" />
+            </div>
+            <div class="field-actions">
+              <button id="spotify-search" class="ghost">Search Spotify</button>
+            </div>
+            <div id="spotify-results" class="search-results"></div>
+            <p id="spotify-hint" class="muted">Connect Spotify to search.</p>
+          </div>
+        </div>
+      </section>
     </main>
 
     <script src="spotify.js"></script>
