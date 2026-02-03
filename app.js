@@ -319,9 +319,15 @@ function renderHost(contest) {
   const stopButton = document.querySelector("#stop-play");
   const preview = document.querySelector("#host-audio");
 
-  status.textContent = contest.selection
-    ? `Participants selected: ${contest.topics[contest.selection.topicIndex].label} - Level ${contest.selection.levelIndex + 1}`
+  const selectionText = contest.selection
+    ? (() => {
+        const topic = contest.topics[contest.selection.topicIndex];
+        const song = topic.songs[contest.selection.levelIndex];
+        const meta = song.title || song.artist ? ` • ${song.artist} | ${song.title}` : "";
+        return `Participants selected: ${topic.label} - Level ${song.level}${meta}`;
+      })()
     : "No selection yet";
+  status.textContent = selectionText;
 
   renderBoard(board, contest, {
     showDetails: true,
@@ -338,7 +344,7 @@ function renderHost(contest) {
         }
         return;
       }
-      detail.textContent = song.title || song.artist ? `${song.artist} - ${song.title}` : "No song info";
+      detail.textContent = song.title || song.artist ? `${song.artist} | ${song.title}` : "No song info";
       const trackId = spotify?.parseTrackId?.(song.url);
 
       if (!song.url) {
@@ -368,6 +374,8 @@ function renderHost(contest) {
       contest.selection = null;
       contest.updatedAt = Date.now();
       updateContest(contest);
+      const meta = song.title || song.artist ? ` • ${song.artist} | ${song.title}` : "";
+      status.textContent = `Now playing: ${contest.topics[topicIndex].label} - Level ${song.level}${meta}`;
     },
   });
 

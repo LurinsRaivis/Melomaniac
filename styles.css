@@ -234,6 +234,29 @@ main {
   transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
+body[data-view="participant"] .topic-title {
+  font-size: 1.15rem;
+  padding: 12px 16px;
+  letter-spacing: 0.8px;
+}
+
+body[data-view="participant"] .levels {
+  gap: 8px;
+}
+
+body[data-view="participant"] .level {
+  font-size: 0.85rem;
+  transform: scale(0.88);
+}
+
+body[data-view="participant"] .topic-card {
+  padding: 16px 16px 14px;
+}
+
+body[data-view="participant"] .board {
+  gap: 16px 18px;
+}
+
 .level:hover {
   transform: translateY(-2px) scale(1.03);
   background: var(--accent-dark);
