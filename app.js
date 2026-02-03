@@ -148,12 +148,20 @@ function renderBoard(container, contest, options = {}) {
       level.textContent = song.level;
 
       if (song.used) level.classList.add("used");
+      if (options.showFilled && song.url) level.classList.add("filled");
       if (
         contest.selection &&
         contest.selection.topicIndex === tIndex &&
         contest.selection.levelIndex === sIndex
       ) {
         level.classList.add("selected");
+      }
+      if (
+        options.selectedSlot &&
+        options.selectedSlot.topicIndex === tIndex &&
+        options.selectedSlot.levelIndex === sIndex
+      ) {
+        level.classList.add("setup-selected");
       }
 
       if (!song.used || options.allowUsedClick) {
@@ -401,6 +409,7 @@ function renderSetup(contest) {
   const urlInput = document.querySelector("#song-url");
   const clearButton = document.querySelector("#clear-slot");
   const applyButton = document.querySelector("#apply-slot");
+  const slotPreview = document.querySelector("#slot-preview");
   const searchInput = document.querySelector("#spotify-query");
   const searchButton = document.querySelector("#spotify-search");
   const results = document.querySelector("#spotify-results");
@@ -419,6 +428,10 @@ function renderSetup(contest) {
     artistInput.value = song.artist || "";
     titleInput.value = song.title || "";
     urlInput.value = song.url || "";
+    if (slotPreview) {
+      const meta = song.title || song.artist ? `${song.artist} | ${song.title}` : "Empty slot";
+      slotPreview.textContent = `Selected: ${topic.label} - Level ${song.level} • ${meta}`;
+    }
   }
 
   function saveSlot() {
@@ -432,31 +445,36 @@ function renderSetup(contest) {
     updateContest(contest);
   }
 
-  renderBoard(board, contest, {
-    onPick: (topicIndex, levelIndex) => {
-      selectedTopic = topicIndex;
-      selectedLevel = levelIndex;
-      loadSlot();
-    },
-  });
+  function renderSetupBoard() {
+    renderBoard(board, contest, {
+      showFilled: true,
+      selectedSlot: { topicIndex: selectedTopic, levelIndex: selectedLevel },
+      onPick: (topicIndex, levelIndex) => {
+        selectedTopic = topicIndex;
+        selectedLevel = levelIndex;
+        loadSlot();
+        renderSetupBoard();
+      },
+    });
+  }
+
+  renderSetupBoard();
 
   loadSlot();
 
   applyButton.onclick = () => {
     saveSlot();
-    renderBoard(board, contest, {
-      onPick: (topicIndex, levelIndex) => {
-        selectedTopic = topicIndex;
-        selectedLevel = levelIndex;
-        loadSlot();
-      },
-    });
+    renderSetupBoard();
+    if (slotPreview) slotPreview.textContent += " • Saved";
   };
 
   clearButton.onclick = () => {
     artistInput.value = "";
     titleInput.value = "";
     urlInput.value = "";
+    saveSlot();
+    renderSetupBoard();
+    loadSlot();
   };
 
   saveButton.onclick = () => {
@@ -466,6 +484,15 @@ function renderSetup(contest) {
     updateContest(contest);
     alert("Saved! Host and participants will update automatically.");
   };
+
+  const liveInputs = [topicInput, artistInput, titleInput, urlInput];
+  liveInputs.forEach((input) => {
+    input.addEventListener("input", () => {
+      saveSlot();
+      renderSetupBoard();
+      loadSlot();
+    });
+  });
 
   if (hint) {
     spotify?.getAccessToken?.().then((token) => {
@@ -516,6 +543,8 @@ function renderSetup(contest) {
           titleInput.value = track.name || "";
           urlInput.value = track.uri;
           saveSlot();
+          renderSetupBoard();
+          loadSlot();
         };
 
         row.appendChild(img);
