@@ -408,6 +408,7 @@ function renderSetup(contest) {
   const titleInput = document.querySelector("#song-title");
   const urlInput = document.querySelector("#song-url");
   const clearButton = document.querySelector("#clear-slot");
+  const resetUsedButton = document.querySelector("#reset-used");
   const applyButton = document.querySelector("#apply-slot");
   const slotPreview = document.querySelector("#slot-preview");
   const searchInput = document.querySelector("#spotify-query");
@@ -445,6 +446,14 @@ function renderSetup(contest) {
     updateContest(contest);
   }
 
+  function resetUsed() {
+    const song = contest.topics[selectedTopic].songs[selectedLevel];
+    if (!song.used) return;
+    song.used = false;
+    contest.updatedAt = Date.now();
+    updateContest(contest);
+  }
+
   function renderSetupBoard() {
     renderBoard(board, contest, {
       showFilled: true,
@@ -476,6 +485,14 @@ function renderSetup(contest) {
     renderSetupBoard();
     loadSlot();
   };
+
+  if (resetUsedButton) {
+    resetUsedButton.onclick = () => {
+      resetUsed();
+      renderSetupBoard();
+      loadSlot();
+    };
+  }
 
   saveButton.onclick = () => {
     contest.name = nameInput.value.trim() || "Melomaniac";
@@ -563,6 +580,134 @@ function renderSetup(contest) {
   };
 }
 
+function renderPoints(contest) {
+  const list = document.querySelector("#score-list");
+  const addButton = document.querySelector("#add-team");
+  const resetButton = document.querySelector("#reset-scores");
+  const count = document.querySelector("#team-count");
+  if (!list || !addButton || !resetButton || !count) return;
+
+  const key = `melomaniac:scores:${contest.id}`;
+  const loadScores = () => {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      return [];
+    }
+  };
+
+  const saveScores = (scores) => {
+    localStorage.setItem(key, JSON.stringify(scores));
+  };
+
+  let scores = loadScores();
+
+  function render() {
+    list.innerHTML = "";
+    count.textContent = String(scores.length);
+    scores.forEach((team) => {
+      const card = document.createElement("div");
+      card.className = "score-card";
+
+      const row = document.createElement("div");
+      row.className = "score-row";
+
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = team.name;
+      nameInput.placeholder = "Team name";
+      nameInput.oninput = () => {
+        team.name = nameInput.value;
+        saveScores(scores);
+      };
+
+      const value = document.createElement("div");
+      value.className = "score-value";
+      value.textContent = team.points;
+
+      row.appendChild(nameInput);
+      row.appendChild(value);
+
+      const actions = document.createElement("div");
+      actions.className = "score-actions";
+
+      const add1 = document.createElement("button");
+      add1.textContent = "+1";
+      add1.onclick = () => {
+        team.points += 1;
+        value.textContent = team.points;
+        saveScores(scores);
+      };
+
+      const add3 = document.createElement("button");
+      add3.textContent = "+3";
+      add3.onclick = () => {
+        team.points += 3;
+        value.textContent = team.points;
+        saveScores(scores);
+      };
+
+      const add5 = document.createElement("button");
+      add5.textContent = "+5";
+      add5.onclick = () => {
+        team.points += 5;
+        value.textContent = team.points;
+        saveScores(scores);
+      };
+
+      const sub1 = document.createElement("button");
+      sub1.className = "ghost";
+      sub1.textContent = "-1";
+      sub1.onclick = () => {
+        team.points = Math.max(0, team.points - 1);
+        value.textContent = team.points;
+        saveScores(scores);
+      };
+
+      const remove = document.createElement("button");
+      remove.className = "ghost";
+      remove.textContent = "Remove";
+      remove.onclick = () => {
+        scores = scores.filter((item) => item.id !== team.id);
+        saveScores(scores);
+        render();
+      };
+
+      actions.appendChild(add1);
+      actions.appendChild(add3);
+      actions.appendChild(add5);
+      actions.appendChild(sub1);
+      actions.appendChild(remove);
+
+      card.appendChild(row);
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+  }
+
+  addButton.onclick = () => {
+    scores.push({
+      id: uid(),
+      name: `Team ${scores.length + 1}`,
+      points: 0,
+    });
+    saveScores(scores);
+    render();
+  };
+
+  resetButton.onclick = () => {
+    const ok = confirm("Reset all scores to 0?");
+    if (!ok) return;
+    scores = scores.map((team) => ({ ...team, points: 0 }));
+    saveScores(scores);
+    render();
+  };
+
+  render();
+}
+
 function start() {
   const contestId = ensureContestId();
   const contest = getContest(contestId) || createContest("Melomaniac", contestId);
@@ -580,6 +725,10 @@ function start() {
 
   if (view === "setup") {
     renderSetup(contest);
+  }
+
+  if (view === "points") {
+    renderPoints(contest);
   }
 
   window.addEventListener("storage", (event) => {

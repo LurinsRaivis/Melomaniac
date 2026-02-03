@@ -439,6 +439,50 @@ body[data-view="participant"] .board {
   color: var(--muted);
 }
 
+.score-list {
+  display: grid;
+  gap: 16px;
+}
+
+.score-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.score-row input[type="text"] {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 42, 46, 0.2);
+  padding: 8px 10px;
+  font-weight: 600;
+}
+
+.score-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.score-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.score-actions button {
+  min-width: 70px;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;

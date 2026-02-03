@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Melomaniac | Host</title>
+    <title>Melomaniac | Points</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body data-view="host">
+  <body data-view="points">
     <header>
       <nav class="nav">
         <div class="brand">
@@ -31,25 +31,18 @@
     <main>
       <section class="hero">
         <div>
-          <h1>Host control</h1>
-          <p>
-            Tap any topic level to play it. The tile will gray out for participants,
-            and the song will start on their screen.
-          </p>
-          <div class="alert" style="margin-top: 12px;">
-            Tip: use the Setup page to load songs before the contest starts.
-          </div>
+          <h1>Scoreboard</h1>
+          <p>Host-only scoring. Points are stored locally on this device.</p>
         </div>
         <div class="status-card">
-          <small>Participant selection</small>
-          <strong id="host-status">No selection yet</strong>
-          <button id="stop-play" class="ghost" style="margin-top: 12px;">Stop playback</button>
+          <small>Teams</small>
+          <strong id="team-count">0</strong>
+          <button id="add-team" style="margin-top: 12px;">Add team</button>
+          <button id="reset-scores" class="ghost" style="margin-top: 8px;">Reset all scores</button>
         </div>
       </section>
 
-      <section id="board" class="board"></section>
-
-      <audio id="host-audio" preload="auto"></audio>
+      <section id="score-list" class="score-list"></section>
     </main>
 
     <script src="spotify.js"></script>
