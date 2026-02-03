@@ -585,7 +585,7 @@ function renderPoints(contest) {
   const addButton = document.querySelector("#add-team");
   const resetButton = document.querySelector("#reset-scores");
   const count = document.querySelector("#team-count");
-  if (!list || !addButton || !resetButton || !count) return;
+  if (!list || !addButton || !count) return;
 
   const key = `melomaniac:scores:${contest.id}`;
   const loadScores = () => {
@@ -697,13 +697,15 @@ function renderPoints(contest) {
     render();
   };
 
-  resetButton.onclick = () => {
-    const ok = confirm("Reset all scores to 0?");
-    if (!ok) return;
-    scores = scores.map((team) => ({ ...team, points: 0 }));
-    saveScores(scores);
-    render();
-  };
+  if (resetButton) {
+    resetButton.onclick = () => {
+      const ok = confirm("Reset all scores to 0?");
+      if (!ok) return;
+      scores = scores.map((team) => ({ ...team, points: 0 }));
+      saveScores(scores);
+      render();
+    };
+  }
 
   render();
 }
